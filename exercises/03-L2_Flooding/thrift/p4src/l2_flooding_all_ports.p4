@@ -66,13 +66,34 @@ control MyIngress(inout headers hdr,
     }
 
     //TODO 3: define the broadcast action
+    action broadcast() {
+        standard_metadata.mcast_grp = 1;
+    }
 
     //TODO 4: define a forwarding match-action table like the one from l2 basic forwarding
+    action set_egress(bit<9> port){
+        standard_metadata.egress_spec = port;
+    }
 
-    //TODO 5: Add a broadcast action to the action list and set it as default
+    table forwarder {
+        key = {
+            hdr.ethernet.dstAddr : exact;
+            // exact, ternary, lpm
+        }
+        actions = {
+            set_egress;
+            broadcast;
+            NoAction;
+        }
+        // table properties
+        size = 1024;
+        //TODO 5: Add a broadcast action to the action list and set it as default
+        default_action = broadcast;
+    } 
 
     apply {
         //TODO 6: apply your table
+        forwarder.apply();
     }
 }
 
